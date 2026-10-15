@@ -4,7 +4,8 @@ ESPHome configuration for the [Onju Voice](https://github.com/justLV/onju-voice)
 for the Google Nest Mini) as a Home Assistant voice satellite, with on-device wake word (microWakeWord
 "Okay Nabu") and acoustic echo cancellation.
 
-Based on [rmeissn/onju-voice-esphome](https://github.com/rmeissn/onju-voice-esphome) (MIT).
+Based on the [Onju Voice ESPHome gist](https://gist.github.com/rmeissn/a6bc1c91f65a47cb5e37d6e2fcfa8849) by
+Roy Meissner (rmeissn). See [Credits](#credits).
 
 ## What it uses
 
@@ -22,6 +23,9 @@ Based on [rmeissn/onju-voice-esphome](https://github.com/rmeissn/onju-voice-esph
    **FLAC, mono, 48 kHz, 16-bit**: the speaker media player rejects 24-bit files ("Incompatible bits per sample"),
    and then the wake word action waits forever for the beep.
 3. Set `name` in `substitutions` to your device name, then compile and flash.
+
+The sounds are fetched over plain HTTP from `ha_url`. This is fine on a trusted LAN; use an `https://` URL otherwise.
+`esp_audio_stack` is pinned to a commit: update the hash on purpose, after reading the upstream changes.
 
 ## Behavior
 
@@ -47,6 +51,16 @@ Based on [rmeissn/onju-voice-esphome](https://github.com/rmeissn/onju-voice-esph
   reference of the speaker output. Use tap-to-talk with music on. Work in progress: AEC telemetry and reference
   delay tuning, and `esp_afe` with both mics.
 - After an OTA flash the wake word was seen not to restart once; a plain reboot does not show it.
+
+## Credits
+
+- Roy Meissner ([@rmeissn](https://github.com/rmeissn)): the base configuration,
+  [gist](https://gist.github.com/rmeissn/a6bc1c91f65a47cb5e37d6e2fcfa8849), also published as
+  [rmeissn/onju-voice-esphome](https://github.com/rmeissn/onju-voice-esphome) (MIT).
+- [n-IA-hane/esphome-audio-stack](https://github.com/n-IA-hane/esphome-audio-stack) (MIT): `esp_audio_stack`, `esp_aec`.
+- [kahrendt/microWakeWord](https://github.com/kahrendt/microWakeWord): the `okay_nabu` model.
+- [justLV/onju-voice](https://github.com/justLV/onju-voice): the hardware.
+- Sounds: sources are in the comments next to each URL in `onju-voice.yaml` (freesound.org, Home Assistant Voice PE).
 
 ## License
 

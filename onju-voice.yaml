@@ -15,7 +15,7 @@ substitutions:
   # NOTE for sounds: all sound were converted to flac, mono, 48khz (match the speaker sample_rate!
   
 external_components:
-  - source: github://n-IA-hane/esphome-audio-stack@main
+  - source: github://n-IA-hane/esphome-audio-stack@0482d741a938378ef948e3b8f3dd31536f9f2cc9 # Release 2026.10.2, pinned (was @main)
     components: [esp_audio_stack, esp_aec]
     refresh: 0s
 
@@ -202,6 +202,7 @@ micro_wake_word: # requires 16khz input currently
     - if:
         condition:
           - switch.is_on: use_wake_word # ignore detection if switch is off
+          - switch.is_off: master_mute_switch # never start the assistant while muted
         then:
           - media_player.speaker.play_on_device_media_file: 
               media_file: wakeup
@@ -404,10 +405,13 @@ media_player:
                 then:
                   - lambda: id(led_state) = "idle";
                   - script.execute: controle_leds
-      - if: # not while the assistant listens/replies: voice_assistant.on_end restarts it
+      - if: # not while the assistant listens/replies (voice_assistant.on_end restarts it), nor when muted or disabled
           condition:
-            not:
-              voice_assistant.is_running
+            and:
+              - not:
+                  voice_assistant.is_running
+              - switch.is_on: use_wake_word
+              - switch.is_off: master_mute_switch
           then:
             - micro_wake_word.start
     on_idle: # also called after announcement finished, is triggered on volume change
@@ -431,10 +435,13 @@ media_player:
                 then:
                   - lambda: id(led_state) = "idle";
                   - script.execute: controle_leds
-      - if: # not while the assistant listens/replies: voice_assistant.on_end restarts it
+      - if: # not while the assistant listens/replies (voice_assistant.on_end restarts it), nor when muted or disabled
           condition:
-            not:
-              voice_assistant.is_running
+            and:
+              - not:
+                  voice_assistant.is_running
+              - switch.is_on: use_wake_word
+              - switch.is_off: master_mute_switch
           then:
             - micro_wake_word.start
 
