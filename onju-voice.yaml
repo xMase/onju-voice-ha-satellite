@@ -160,6 +160,24 @@ globals:
     initial_value: '0'
 
 interval:
+  - interval: 5s # watchdog: restart the wake word when nothing else did (seen after OTA)
+    then:
+      - if:
+          condition:
+            and:
+              - lambda: return id(booted);
+              - api.connected:
+              - switch.is_on: use_wake_word
+              - switch.is_off: master_mute_switch
+              - not:
+                  voice_assistant.is_running
+              - not:
+                  micro_wake_word.is_running
+              - not:
+                  media_player.is_announcing:
+          then:
+            - logger.log: "Watchdog: starting wake word"
+            - micro_wake_word.start
   - interval: 2s
     then:
       - if:
@@ -496,8 +514,6 @@ voice_assistant: # need to use a 16khz due to mww
           and:
             - switch.is_on: use_wake_word
             - switch.is_off: master_mute_switch
-            - not:
-                media_player.is_playing:
         then:
           - micro_wake_word.start:
   on_client_connected:
@@ -643,41 +659,25 @@ binary_sensor:
                         then:
                           - voice_assistant.stop
                         else:
-                          - if: # paused: resume. While playing, fall through and start the assistant (tap to talk over music; on_start ducks it)
+                          - if: # music playing or paused: pause/resume; idle: start the assistant
                               condition:
-                                media_player.is_paused:
-                                  id: nabu
+                                or:
+                                  - media_player.is_playing:
+                                      id: nabu
+                                  - media_player.is_paused:
+                                      id: nabu
                               then:
                                 - media_player.toggle:
                                     id: nabu
                               else:
-                                - if: # if not paused, activate va (also while music plays)
-                                    condition:
-                                      and:
-                                        - not:
-                                            voice_assistant.is_running
-                                        - lambda: return id(booted);
-                                        - not:
-                                            switch.is_on: master_mute_switch
-                                    then:
-                                      - media_player.speaker.play_on_device_media_file:
-                                          media_file: wakeup
-                                          announcement: true
-                                      - wait_until:
-                                          speaker.is_playing:
-                                            id: onju_out
-                                      #- wait_until:
-                                      #    not:
-                                      #      speaker.is_playing:
-                                      #        id: onju_out
-                                      - delay: 50ms
-                                      - voice_assistant.start
+                                - script.execute: tap_to_talk
     - timing: # double click
       - ON for at most 0.5s
       - OFF for at most 0.5s
       - ON for at most 0.5s
       - OFF for at least 0.25s
       then:
+        - script.execute: tap_to_talk # also over music: on_start ducks it
         - event.trigger:
             id: button_press_event
             event_type: "double_press"
@@ -907,6 +907,26 @@ light:
     default_transition_length: 100ms
 
 script:
+  - id: tap_to_talk
+    then:
+      - if:
+          condition:
+            and:
+              - not:
+                  voice_assistant.is_running
+              - lambda: return id(booted);
+              - not:
+                  switch.is_on: master_mute_switch
+          then:
+            - media_player.speaker.play_on_device_media_file:
+                media_file: wakeup
+                announcement: true
+            - wait_until:
+                speaker.is_playing:
+                  id: onju_out
+            - delay: 50ms
+            - voice_assistant.start
+
   - id: controle_leds
     then:
       - if:
@@ -1159,6 +1179,11 @@ script:
           id(is_timer_active) = output;
 
 switch:
+  - platform: esp_audio_stack
+    esp_audio_stack_id: i2s_shared
+    aec:
+      name: Echo Cancellation
+      restore_mode: RESTORE_DEFAULT_ON
   # This is the master mute switch. It is exposed to Home Assistant. The user can only turn it on and off if the hardware switch is off. (The hardware switch overrides the software one)
   - platform: template
     id: master_mute_switch

@@ -29,10 +29,14 @@ The sounds are fetched over plain HTTP from `ha_url`. This is fine on a trusted 
 
 ## Behavior
 
-- Center button, single click: stop the timer / announcement / assistant; if media is paused, resume it;
-  otherwise start the assistant (also while music plays, as tap-to-talk: `on_start` ducks the music by 30 dB).
+- Center button, single click: stop the timer / announcement / assistant; if music is playing or paused, pause or
+  resume it; when idle, start the assistant.
+- Center button, double click: start the assistant, also while music plays (`on_start` ducks the music by 30 dB).
 - Double / triple / long press: exposed as an `event` entity for automations. Long press also resets the audio
   components and restarts the wake word.
+- The wake word stays on while music plays (the AEC removes the echo). A 5 s watchdog restarts it if nothing else
+  did, e.g. after an OTA flash.
+- `Echo Cancellation` switch: turns the AEC off at runtime, to compare.
 - `Wake word sensitivity` select: per-model probability cutoffs (0.85 / 0.75 / 0.69 / 0.56).
 
 ## Current tuning
@@ -47,10 +51,9 @@ The sounds are fetched over plain HTTP from `ha_url`. This is fine on a trusted 
 
 ## Known limits
 
-- **Wake word while music plays is unreliable.** The Onju has no hardware loopback, so the AEC uses a software
-  reference of the speaker output. Use tap-to-talk with music on. Work in progress: AEC telemetry and reference
-  delay tuning, and `esp_afe` with both mics.
-- After an OTA flash the wake word was seen not to restart once; a plain reboot does not show it.
+- **Wake word while music plays** works, but less reliably than in silence: the Onju has no hardware loopback, so
+  the AEC uses a software reference of the speaker output. Use the double click when it does not fire.
+- Free internal heap is low (~30-45 KB with music and the assistant running), so `esp_afe` with both mics may not fit.
 
 ## Credits
 
