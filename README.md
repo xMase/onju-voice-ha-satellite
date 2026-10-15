@@ -1,4 +1,4 @@
-# onju-voice
+# onju-voice-ha-satellite
 
 ESPHome configuration for the [Onju Voice](https://github.com/justLV/onju-voice) board (ESP32-S3 replacement PCB
 for the Google Nest Mini) as a Home Assistant voice satellite, with on-device wake word (microWakeWord
