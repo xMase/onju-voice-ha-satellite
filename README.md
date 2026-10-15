@@ -1,0 +1,53 @@
+# onju-voice
+
+ESPHome configuration for the [Onju Voice](https://github.com/justLV/onju-voice) board (ESP32-S3 replacement PCB
+for the Google Nest Mini) as a Home Assistant voice satellite, with on-device wake word (microWakeWord
+"Okay Nabu") and acoustic echo cancellation.
+
+Based on [rmeissn/onju-voice-esphome](https://github.com/rmeissn/onju-voice-esphome) (MIT).
+
+## What it uses
+
+- [n-IA-hane/esphome-audio-stack](https://github.com/n-IA-hane/esphome-audio-stack): `esp_audio_stack` (full-duplex
+  I2S shared by the SPH0645 mics and the DAC) and `esp_aec` (software echo cancellation, 16 kHz).
+- `micro_wake_word` with `okay_nabu` (20241226.3), `voice_assistant`, `media_player: speaker` with a mixer
+  (announcement + media + intercom) and per-stream resamplers.
+- Touch buttons (VOL-, VOL+, center), LED ring states, mute switch, timers, alarm siren.
+
+## Setup
+
+1. Add these keys to your ESPHome `secrets.yaml`: `ha_url` (e.g. `http://homeassistant.local:8123`), `wifi_ssid`,
+   `wifi_password`, `onju_api_key`.
+2. Put the sounds in Home Assistant `www/resource/` (served at `/local/resource/`). They must be
+   **FLAC, mono, 48 kHz, 16-bit**: the speaker media player rejects 24-bit files ("Incompatible bits per sample"),
+   and then the wake word action waits forever for the beep.
+3. Set `name` in `substitutions` to your device name, then compile and flash.
+
+## Behavior
+
+- Center button, single click: stop the timer / announcement / assistant; if media is paused, resume it;
+  otherwise start the assistant (also while music plays, as tap-to-talk: `on_start` ducks the music by 30 dB).
+- Double / triple / long press: exposed as an `event` entity for automations. Long press also resets the audio
+  components and restarts the wake word.
+- `Wake word sensitivity` select: per-model probability cutoffs (0.85 / 0.75 / 0.69 / 0.56).
+
+## Current tuning
+
+| Setting | Value | Why |
+|---|---|---|
+| `voice_assistant` `gain_factor` | 1 | higher values clipped the STT audio at 0 dBFS |
+| `voice_assistant` `auto_gain` / `noise_suppression_level` | 0 dBFS / 0 | stacked with HA's own processing; cut soft consonants |
+| `micro_wake_word` `gain_factor` | 8 | 32 saturated the mic with music playing |
+| `esp_aec` `mode` / `filter_length` | `sr_low_cost` / 8 | `sr_*` is recommended with a wake word; 8 = 128 ms tail |
+| `mic_channel` | right | one mic; stereo capture lowered the SNR |
+
+## Known limits
+
+- **Wake word while music plays is unreliable.** The Onju has no hardware loopback, so the AEC uses a software
+  reference of the speaker output. Use tap-to-talk with music on. Work in progress: AEC telemetry and reference
+  delay tuning, and `esp_afe` with both mics.
+- After an OTA flash the wake word was seen not to restart once; a plain reboot does not show it.
+
+## License
+
+MIT, see [LICENSE](LICENSE).
