@@ -19,7 +19,7 @@ Roy Meissner (rmeissn). See [Credits](#credits).
 
 1. Add these keys to your ESPHome `secrets.yaml`: `ha_url` (e.g. `http://homeassistant.local:8123`), `wifi_ssid`,
    `wifi_password`, `onju_api_key`.
-2. Put the sounds in Home Assistant `www/resource/` (served at `/local/resource/`). They must be
+2. Copy the files in [`sounds/`](sounds/) to Home Assistant `www/resource/` (served at `/local/resource/`). They must be
    **FLAC, mono, 48 kHz, 16-bit**: the speaker media player rejects 24-bit files ("Incompatible bits per sample"),
    and then the wake word action waits forever for the beep.
 3. Set `name` in `substitutions` to your device name, then compile and flash.
@@ -63,7 +63,7 @@ The sounds are fetched over plain HTTP from `ha_url`. This is fine on a trusted 
 - [n-IA-hane/esphome-audio-stack](https://github.com/n-IA-hane/esphome-audio-stack) (MIT): `esp_audio_stack`, `esp_aec`.
 - [kahrendt/microWakeWord](https://github.com/kahrendt/microWakeWord): the `okay_nabu` model.
 - [justLV/onju-voice](https://github.com/justLV/onju-voice): the hardware.
-- Sounds: sources are in the comments next to each URL in `onju-voice.yaml` (freesound.org, Home Assistant Voice PE).
+- Sounds: authors and licenses (CC BY 4.0, CC0) in [`sounds/CREDITS.md`](sounds/CREDITS.md).
 
 ## License
 
