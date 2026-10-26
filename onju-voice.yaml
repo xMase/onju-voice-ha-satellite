@@ -15,7 +15,7 @@ substitutions:
   # NOTE for sounds: all sound were converted to flac, mono, 48khz (match the speaker sample_rate!
   
 external_components:
-  - source: github://n-IA-hane/esphome-audio-stack@0482d741a938378ef948e3b8f3dd31536f9f2cc9 # Release 2026.10.2, pinned (was @main)
+  - source: github://n-IA-hane/esphome-audio-stack@b1d08afc4655bcd9c60e7aae9960858218608150 # v2026.11.0-dev: 2026.10.2 does not compile on ESPHome 2026.10.0 (upstream issue #15)
     components: [esp_audio_stack, esp_aec]
     refresh: 0s
 
